@@ -5,12 +5,18 @@ inputs:
     description: 'An explicit key for versioning the cache'
     required: false
   path:
-    description: 'The file or folder to be cached'
+    description: 'The file or folder to be cached. Can be multiple paths separated by newlines'
     required: true
   strategy:
     description: 'Caching mechanism to be used'
     required: false
     default: 'move'
+  restore-keys:
+    description: 'An ordered list of keys to use for restoring the cache if no cache hit occurred for key. Can be multiple keys separated by newlines'
+    required: false
+  cache-location:
+    description: 'Custom location to store the cache. If not specified, uses RUNNER_TOOL_CACHE environment variable'
+    required: false
 outputs:
   cache-hit:
     description: 'A boolean value to indicate if cache was found and restored'
