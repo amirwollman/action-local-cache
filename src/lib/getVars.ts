@@ -13,11 +13,13 @@ type Vars = {
   cachePath: string
   options: {
     key: string
-    path: string,
+    restoreKeys: string[]
+    paths: string[]
     strategy: Strategy
+    cacheLocation?: string
   }
-  targetDir: string
-  targetPath: string
+  targetDirs: string[]
+  targetPaths: string[]
 }
 
 export const getVars = (): Vars => {
@@ -31,11 +33,15 @@ export const getVars = (): Vars => {
 
   const options = {
     key: core.getInput('key') || 'no-key',
-    path: core.getInput('path'),
+    restoreKeys: core.getInput('restore-keys')
+      ? core.getInput('restore-keys').split('|').map((k: string) => k.trim())
+      : [],
+    paths: core.getInput('path').split('|').map((p: string) => p.trim()),
     strategy: core.getInput('strategy') as Strategy,
+    cacheLocation: core.getInput('cache-location'),
   }
 
-  if (!options.path) {
+  if (!options.paths.length) {
     throw new TypeError('path is required but was not provided.')
   }
 
@@ -43,16 +49,17 @@ export const getVars = (): Vars => {
     throw new TypeError(`Unknown strategy ${options.strategy}`)
   }
 
-  const cacheDir = path.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY, options.key)
-  const cachePath = path.join(cacheDir, options.path)
-  const targetPath = path.resolve(CWD, options.path)
-  const { dir: targetDir } = path.parse(targetPath)
+  const baseCacheDir = options.cacheLocation || path.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY)
+  const cacheDir = path.join(baseCacheDir, options.key)
+  const cachePath = path.join(cacheDir, options.paths[0]) // Primary path for cache
+  const targetPaths = options.paths.map((p: string) => path.resolve(CWD, p))
+  const targetDirs = targetPaths.map((p: string) => path.parse(p).dir)
 
   return {
     cacheDir,
     cachePath,
     options,
-    targetDir,
-    targetPath,
+    targetDirs,
+    targetPaths,
   }
 }
