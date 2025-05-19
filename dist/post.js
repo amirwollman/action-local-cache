@@ -2,6 +2,7 @@
 
 var crypto = require('crypto');
 var path2 = require('path');
+var util = require('util');
 
 function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }
 
@@ -5296,9 +5297,10 @@ var log_default = import_loglevel.default;
 
 // src/post.ts
 var import_io_util = __toESM(require_io_util());
+var globPromise = util.promisify(import_glob.default);
 async function savePath(sourcePath, cachePath, strategy) {
   if (sourcePath.includes("*")) {
-    const files = await (0, import_glob.default)(sourcePath, { dot: true });
+    const files = await globPromise(sourcePath);
     if (files.length === 0) {
       log_default.info(`No files found matching pattern: ${sourcePath}`);
       return;

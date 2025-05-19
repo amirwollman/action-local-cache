@@ -1,6 +1,8 @@
 import { setFailed } from '@actions/core'
 import { mkdirP, mv, cp, rmRF } from '@actions/io'
 import path from 'path'
+import fs from 'fs'
+import { promisify } from 'util'
 import glob from 'glob'
 
 import { getVars } from './lib/getVars'
@@ -8,10 +10,12 @@ import { isErrorLike } from './lib/isErrorLike'
 import log from './lib/log'
 import { exists } from '@actions/io/lib/io-util'
 
+const globPromise = promisify(glob)
+
 async function savePath(sourcePath: string, cachePath: string, strategy: string): Promise<void> {
   // Handle wildcards
   if (sourcePath.includes('*')) {
-    const files = await glob(sourcePath, { dot: true })
+    const files = await globPromise(sourcePath)
     if (files.length === 0) {
       log.info(`No files found matching pattern: ${sourcePath}`)
       return

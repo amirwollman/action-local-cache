@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@masterworks/eslint-config-masterworks": "github:MasterworksIO/eslint-config-masterworks#2.1.1",
+    "@types/glob": "^8.1.0",
     "@types/jest": "29.5.3",
     "@types/node": "18.16.19",
     "@typescript-eslint/eslint-plugin": "5.62.0",
