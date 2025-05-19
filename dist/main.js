@@ -2946,14 +2946,15 @@ async function tryRestoreCache(cachePath, targetPath, targetDir, strategy) {
 }
 async function main() {
   try {
-    const { cachePath, targetDirs, targetPaths, options } = getVars();
+    const { cacheDir, targetDirs, targetPaths, options } = getVars();
     let cacheHit = false;
-    if (await tryRestoreCache(cachePath, targetPaths[0], targetDirs[0], options.strategy)) {
+    const primaryCachePath = path__default.default.join(cacheDir, options.paths[0]);
+    if (await tryRestoreCache(primaryCachePath, targetPaths[0], targetDirs[0], options.strategy)) {
       cacheHit = true;
       log_default.info(`Cache found and restored to ${options.paths[0]} with ${options.strategy} strategy`);
     } else {
       for (const restoreKey of options.restoreKeys) {
-        const restoreCachePath = path__default.default.join(path__default.default.dirname(cachePath), restoreKey, options.paths[0]);
+        const restoreCachePath = path__default.default.join(cacheDir, restoreKey, options.paths[0]);
         if (await tryRestoreCache(restoreCachePath, targetPaths[0], targetDirs[0], options.strategy)) {
           cacheHit = true;
           log_default.info(
@@ -2965,9 +2966,10 @@ async function main() {
     }
     if (cacheHit && options.paths.length > 1) {
       for (let i = 1; i < options.paths.length; i++) {
-        const pathCachePath = path__default.default.join(path__default.default.dirname(cachePath), options.paths[i]);
+        const relativePath = options.paths[i];
+        const pathCachePath = path__default.default.join(cacheDir, relativePath);
         if (await tryRestoreCache(pathCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
-          log_default.info(`Additional path ${options.paths[i]} restored with ${options.strategy} strategy`);
+          log_default.info(`Additional path ${relativePath} restored with ${options.strategy} strategy`);
         }
       }
     }

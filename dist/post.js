@@ -5354,11 +5354,10 @@ async function post() {
     log_default.info(`Primary path ${options.paths[0]} saved to cache with ${options.strategy} strategy`);
     if (options.paths.length > 1) {
       for (let i = 1; i < options.paths.length; i++) {
-        const pathCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), options.paths[i]);
+        const relativePath = options.paths[i];
+        const pathCachePath = path2__default.default.join(cacheDir, relativePath);
         await savePath(targetPaths[i], pathCachePath, options.strategy);
-        log_default.info(
-          `Additional path ${options.paths[i]} saved to cache with ${options.strategy} strategy`
-        );
+        log_default.info(`Additional path ${relativePath} saved to cache with ${options.strategy} strategy`);
       }
     }
   } catch (error) {

@@ -35,17 +35,18 @@ async function tryRestoreCache(
 
 async function main(): Promise<void> {
   try {
-    const { cachePath, targetDirs, targetPaths, options } = getVars()
+    const { cacheDir, targetDirs, targetPaths, options } = getVars()
     let cacheHit = false
 
     // Try primary key first
-    if (await tryRestoreCache(cachePath, targetPaths[0], targetDirs[0], options.strategy)) {
+    const primaryCachePath = path.join(cacheDir, options.paths[0])
+    if (await tryRestoreCache(primaryCachePath, targetPaths[0], targetDirs[0], options.strategy)) {
       cacheHit = true
       log.info(`Cache found and restored to ${options.paths[0]} with ${options.strategy} strategy`)
     } else {
       // Try restore-keys
       for (const restoreKey of options.restoreKeys) {
-        const restoreCachePath = path.join(path.dirname(cachePath), restoreKey, options.paths[0])
+        const restoreCachePath = path.join(cacheDir, restoreKey, options.paths[0])
         if (
           await tryRestoreCache(restoreCachePath, targetPaths[0], targetDirs[0], options.strategy)
         ) {
@@ -61,9 +62,10 @@ async function main(): Promise<void> {
     // Handle additional paths if primary path was restored
     if (cacheHit && options.paths.length > 1) {
       for (let i = 1; i < options.paths.length; i++) {
-        const pathCachePath = path.join(path.dirname(cachePath), options.paths[i])
+        const relativePath = options.paths[i]
+        const pathCachePath = path.join(cacheDir, relativePath)
         if (await tryRestoreCache(pathCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
-          log.info(`Additional path ${options.paths[i]} restored with ${options.strategy} strategy`)
+          log.info(`Additional path ${relativePath} restored with ${options.strategy} strategy`)
         }
       }
     }

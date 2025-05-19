@@ -82,11 +82,11 @@ async function post(): Promise<void> {
     // Save additional paths if any
     if (options.paths.length > 1) {
       for (let i = 1; i < options.paths.length; i++) {
-        const pathCachePath = path.join(path.dirname(cachePath), options.paths[i])
+        // Use the path relative to the workspace root
+        const relativePath = options.paths[i]
+        const pathCachePath = path.join(cacheDir, relativePath)
         await savePath(targetPaths[i], pathCachePath, options.strategy)
-        log.info(
-          `Additional path ${options.paths[i]} saved to cache with ${options.strategy} strategy`
-        )
+        log.info(`Additional path ${relativePath} saved to cache with ${options.strategy} strategy`)
       }
     }
   } catch (error: unknown) {
