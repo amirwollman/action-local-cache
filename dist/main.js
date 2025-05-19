@@ -2081,14 +2081,14 @@ var require_core = __commonJS({
       return val.trim();
     }
     exports.getInput = getInput2;
-    function getMultilineInput(name, options) {
+    function getMultilineInput2(name, options) {
       const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
       return inputs.map((input) => input.trim());
     }
-    exports.getMultilineInput = getMultilineInput;
+    exports.getMultilineInput = getMultilineInput2;
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
@@ -2879,25 +2879,35 @@ var getVars = () => {
   }
   const options = {
     key: core.getInput("key") || "no-key",
-    path: core.getInput("path"),
+    paths: core.getMultilineInput("path"),
     strategy: core.getInput("strategy")
   };
-  if (!options.path) {
-    throw new TypeError("path is required but was not provided.");
+  if (options.paths.length === 0) {
+    const singlePath = core.getInput("path");
+    if (singlePath) {
+      options.paths = [singlePath];
+    } else {
+      throw new TypeError("path is required but was not provided.");
+    }
   }
   if (!Object.values(STRATEGIES).includes(options.strategy)) {
     throw new TypeError(`Unknown strategy ${options.strategy}`);
   }
   const cacheDir = path__default.default.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY, options.key);
-  const cachePath = path__default.default.join(cacheDir, options.path);
-  const targetPath = path__default.default.resolve(CWD, options.path);
-  const { dir: targetDir } = path__default.default.parse(targetPath);
+  const pathItems = options.paths.map((pathStr) => {
+    const targetPath = path__default.default.resolve(CWD, pathStr);
+    const cachePath = path__default.default.join(cacheDir, pathStr);
+    const { dir: targetDir } = path__default.default.parse(targetPath);
+    return {
+      cachePath,
+      targetDir,
+      targetPath
+    };
+  });
   return {
     cacheDir,
-    cachePath,
     options,
-    targetDir,
-    targetPath
+    pathItems
   };
 };
 
@@ -2922,29 +2932,43 @@ if (process.env.LOG_LEVEL) {
 var log_default = import_loglevel.default;
 
 // src/main.ts
+async function processPathItem(pathItem, strategy) {
+  const { cachePath, targetDir, targetPath } = pathItem;
+  if (await (0, import_io_util.exists)(cachePath)) {
+    await (0, import_io.mkdirP)(targetDir);
+    switch (strategy) {
+      case "copy-immutable":
+      case "copy":
+        await (0, import_io.cp)(cachePath, targetPath, {
+          copySourceDirectory: false,
+          recursive: true
+        });
+        break;
+      case "move":
+        await (0, import_io.mv)(cachePath, targetPath, { force: true });
+        break;
+    }
+    log_default.info(`Cache found and restored to ${targetPath} with ${strategy} strategy`);
+    return true;
+  } else {
+    log_default.info(`Skipping: cache not found for ${targetPath}.`);
+    return false;
+  }
+}
 async function main() {
   try {
-    const { cachePath, targetDir, targetPath, options } = getVars();
-    if (await (0, import_io_util.exists)(cachePath)) {
-      await (0, import_io.mkdirP)(targetDir);
-      switch (options.strategy) {
-        case "copy-immutable":
-        case "copy":
-          await (0, import_io.cp)(cachePath, targetPath, {
-            copySourceDirectory: false,
-            recursive: true
-          });
-          break;
-        case "move":
-          await (0, import_io.mv)(cachePath, targetPath, { force: true });
-          break;
-      }
-      log_default.info(`Cache found and restored to ${options.path} with ${options.strategy} strategy`);
-      (0, import_core.setOutput)("cache-hit", true);
-    } else {
-      log_default.info(`Skipping: cache not found for ${options.path}.`);
-      (0, import_core.setOutput)("cache-hit", false);
+    const { pathItems, options } = getVars();
+    let cacheHit = false;
+    let cacheCount = 0;
+    let totalPaths = pathItems.length;
+    for (const pathItem of pathItems) {
+      const result = await processPathItem(pathItem, options.strategy);
+      if (result)
+        cacheCount++;
     }
+    cacheHit = cacheCount > 0;
+    log_default.info(`Cache restoration complete. ${cacheCount}/${totalPaths} paths were restored.`);
+    (0, import_core.setOutput)("cache-hit", cacheHit);
   } catch (error) {
     console.trace(error);
     (0, import_core.setFailed)(isErrorLike(error) ? error.message : `unknown error: ${error}`);

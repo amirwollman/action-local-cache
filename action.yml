@@ -5,7 +5,7 @@ inputs:
     description: 'An explicit key for versioning the cache'
     required: false
   path:
-    description: 'The file or folder to be cached'
+    description: 'The file(s) or folder(s) to be cached. Can be a single path or multiline paths.'
     required: true
   strategy:
     description: 'Caching mechanism to be used'
@@ -13,7 +13,7 @@ inputs:
     default: 'move'
 outputs:
   cache-hit:
-    description: 'A boolean value to indicate if cache was found and restored'
+    description: 'A boolean value to indicate if cache was found and restored (true if at least one path was cached)'
 runs:
   using: 'node16'
   main: 'dist/main.js'
