@@ -41,8 +41,8 @@ async function main(): Promise<void> {
     // Try to restore all paths
     for (let i = 0; i < options.paths.length; i++) {
       const relativePath = options.paths[i]
-      // Use just the basename of the path to match the save approach
-      const pathCachePath = path.join(cacheDir, path.basename(relativePath))
+      // Preserve the full relative path structure
+      const pathCachePath = path.join(cacheDir, relativePath)
 
       // Try primary key first
       if (await tryRestoreCache(pathCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
@@ -58,7 +58,7 @@ async function main(): Promise<void> {
       // Try restore-keys if this is the primary path
       if (i === 0) {
         for (const restoreKey of options.restoreKeys) {
-          const restoreCachePath = path.join(cacheDir, restoreKey, path.basename(relativePath))
+          const restoreCachePath = path.join(cacheDir, restoreKey, relativePath)
           if (
             await tryRestoreCache(restoreCachePath, targetPaths[i], targetDirs[i], options.strategy)
           ) {

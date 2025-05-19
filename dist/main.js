@@ -2950,7 +2950,7 @@ async function main() {
     let cacheHit = false;
     for (let i = 0; i < options.paths.length; i++) {
       const relativePath = options.paths[i];
-      const pathCachePath = path__default.default.join(cacheDir, path__default.default.basename(relativePath));
+      const pathCachePath = path__default.default.join(cacheDir, relativePath);
       if (await tryRestoreCache(pathCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
         cacheHit = true;
         log_default.info(
@@ -2960,7 +2960,7 @@ async function main() {
       }
       if (i === 0) {
         for (const restoreKey of options.restoreKeys) {
-          const restoreCachePath = path__default.default.join(cacheDir, restoreKey, path__default.default.basename(relativePath));
+          const restoreCachePath = path__default.default.join(cacheDir, restoreKey, relativePath);
           if (await tryRestoreCache(restoreCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
             cacheHit = true;
             log_default.info(

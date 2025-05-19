@@ -29,7 +29,7 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
       // Get the relative path from the workspace root
       const relativePath = path.relative(process.cwd(), file)
       // Create the target path in the cache, preserving the directory structure
-      const targetCachePath = path.join(path.dirname(cachePath), path.basename(relativePath))
+      const targetCachePath = path.join(path.dirname(cachePath), relativePath)
       await mkdirP(path.dirname(targetCachePath))
 
       switch (strategy) {
@@ -80,8 +80,8 @@ async function post(): Promise<void> {
     // Save all paths
     for (let i = 0; i < options.paths.length; i++) {
       const relativePath = options.paths[i]
-      // Use just the basename of the path to prevent duplication
-      const pathCachePath = path.join(cacheDir, path.basename(relativePath))
+      // Preserve the full relative path structure
+      const pathCachePath = path.join(cacheDir, relativePath)
       await savePath(targetPaths[i], pathCachePath, options.strategy)
       log.info(
         `${i === 0 ? 'Primary' : 'Additional'} path ${relativePath} saved to cache with ${

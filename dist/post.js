@@ -5308,7 +5308,7 @@ async function savePath(sourcePath, cachePath, strategy) {
     await (0, import_io.mkdirP)(path2__default.default.dirname(cachePath));
     for (const file of files) {
       const relativePath = path2__default.default.relative(process.cwd(), file);
-      const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), path2__default.default.basename(relativePath));
+      const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath);
       await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath));
       switch (strategy) {
         case "copy-immutable":
@@ -5352,7 +5352,7 @@ async function post() {
     await (0, import_io.mkdirP)(cacheDir);
     for (let i = 0; i < options.paths.length; i++) {
       const relativePath = options.paths[i];
-      const pathCachePath = path2__default.default.join(cacheDir, path2__default.default.basename(relativePath));
+      const pathCachePath = path2__default.default.join(cacheDir, relativePath);
       await savePath(targetPaths[i], pathCachePath, options.strategy);
       log_default.info(
         `${i === 0 ? "Primary" : "Additional"} path ${relativePath} saved to cache with ${options.strategy} strategy`
