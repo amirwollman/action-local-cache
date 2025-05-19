@@ -2070,7 +2070,7 @@ var require_core = __commonJS({
       process.env["PATH"] = `${inputPath}${path3.delimiter}${process.env["PATH"]}`;
     }
     exports.addPath = addPath;
-    function getInput2(name, options) {
+    function getInput3(name, options) {
       const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -2080,9 +2080,9 @@ var require_core = __commonJS({
       }
       return val.trim();
     }
-    exports.getInput = getInput2;
+    exports.getInput = getInput3;
     function getMultilineInput2(name, options) {
-      const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput3(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
@@ -2092,7 +2092,7 @@ var require_core = __commonJS({
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val = getInput2(name, options);
+      const val = getInput3(name, options);
       if (trueValue.includes(val))
         return true;
       if (falseValue.includes(val))
@@ -2880,6 +2880,7 @@ var getVars = () => {
   const options = {
     key: core.getInput("key") || "no-key",
     paths: core.getMultilineInput("path"),
+    restoreKeys: core.getMultilineInput("restore-keys"),
     strategy: core.getInput("strategy")
   };
   if (options.paths.length === 0) {
@@ -2957,6 +2958,7 @@ async function processPathItem(pathItem, cacheDir, strategy) {
 async function post() {
   try {
     const { cacheDir, pathItems, options } = getVars();
+    log_default.info(`Saving cache with primary key: ${options.key}`);
     await (0, import_io.mkdirP)(cacheDir);
     let processedCount = 0;
     const totalPaths = pathItems.length;
@@ -2972,7 +2974,7 @@ async function post() {
         log_default.error(`Error processing ${pathItem.targetPath}: ${isErrorLike(itemError) ? itemError.message : "unknown error"}`);
       }
     }
-    log_default.info(`Cache saving complete. ${processedCount}/${totalPaths} paths were cached.`);
+    log_default.info(`Cache saving complete. ${processedCount}/${totalPaths} paths were cached with key: ${options.key}`);
   } catch (error) {
     log_default.trace(error);
     (0, import_core.setFailed)(isErrorLike(error) ? error.message : `unknown error: ${error}`);

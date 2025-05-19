@@ -1,4 +1,4 @@
-import { setFailed } from '@actions/core'
+import { setFailed, getInput } from '@actions/core'
 import { mkdirP, mv, cp, rmRF } from '@actions/io'
 import { exists } from '@actions/io/lib/io-util'
 
@@ -42,6 +42,9 @@ async function processPathItem(pathItem: PathItem, cacheDir: string, strategy: s
 async function post(): Promise<void> {
   try {
     const { cacheDir, pathItems, options } = getVars()
+    
+    // Always save to the primary key, not any of the restore-keys
+    log.info(`Saving cache with primary key: ${options.key}`)
 
     // Ensure the base cache directory exists
     await mkdirP(cacheDir)
@@ -63,7 +66,7 @@ async function post(): Promise<void> {
       }
     }
     
-    log.info(`Cache saving complete. ${processedCount}/${totalPaths} paths were cached.`)
+    log.info(`Cache saving complete. ${processedCount}/${totalPaths} paths were cached with key: ${options.key}`)
 
   } catch (error: unknown) {
     log.trace(error)

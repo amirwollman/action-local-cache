@@ -7,6 +7,9 @@ inputs:
   path:
     description: 'The file(s) or folder(s) to be cached. Can be a single path or multiline paths.'
     required: true
+  restore-keys:
+    description: 'An ordered list of keys to use for restoring the cache if no cache hit occurred for key'
+    required: false
   strategy:
     description: 'Caching mechanism to be used'
     required: false
@@ -14,6 +17,8 @@ inputs:
 outputs:
   cache-hit:
     description: 'A boolean value to indicate if cache was found and restored (true if at least one path was cached)'
+  restored-key:
+    description: 'The key that was used to restore the cache (can be primary key or one of the restore-keys)'
 runs:
   using: 'node16'
   main: 'dist/main.js'

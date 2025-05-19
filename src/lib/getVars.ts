@@ -1,4 +1,3 @@
-
 import path from 'path'
 
 import * as core from '@actions/core'
@@ -20,6 +19,7 @@ type Vars = {
   options: {
     key: string
     paths: string[]
+    restoreKeys: string[]
     strategy: Strategy
   }
   pathItems: PathItem[]
@@ -37,6 +37,7 @@ export const getVars = (): Vars => {
   const options = {
     key: core.getInput('key') || 'no-key',
     paths: core.getMultilineInput('path'),
+    restoreKeys: core.getMultilineInput('restore-keys'),
     strategy: core.getInput('strategy') as Strategy,
   }
 
