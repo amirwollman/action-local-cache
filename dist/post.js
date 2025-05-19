@@ -5298,7 +5298,7 @@ var log_default = import_loglevel.default;
 // src/post.ts
 var import_io_util = __toESM(require_io_util());
 var globPromise = util.promisify(import_glob.default);
-async function savePath(sourcePath, cachePath, strategy) {
+async function savePath(sourcePath, cacheDir, strategy) {
   if (sourcePath.includes("*")) {
     const files = await globPromise(sourcePath);
     if (files.length === 0) {
@@ -5306,45 +5306,43 @@ async function savePath(sourcePath, cachePath, strategy) {
       return;
     }
     for (const file of files) {
-      const relativePath2 = path2__default.default.relative(process.cwd(), file);
-      const targetCachePath2 = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath2);
-      await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath2));
+      const targetPath2 = path2__default.default.join(cacheDir, path2__default.default.relative(process.cwd(), file));
+      await (0, import_io.mkdirP)(path2__default.default.dirname(targetPath2));
       switch (strategy) {
         case "copy-immutable":
-          if (await (0, import_io_util.exists)(targetCachePath2)) {
-            log_default.info(`Cache already exists for ${relativePath2}, skipping`);
+          if (await (0, import_io_util.exists)(targetPath2)) {
+            log_default.info(`Cache already exists for ${file}, skipping`);
             continue;
           }
-          await (0, import_io.cp)(file, targetCachePath2, { copySourceDirectory: false, recursive: true });
+          await (0, import_io.cp)(file, targetPath2, { recursive: true });
           break;
         case "copy":
-          await (0, import_io.rmRF)(targetCachePath2);
-          await (0, import_io.cp)(file, targetCachePath2, { copySourceDirectory: false, recursive: true });
+          await (0, import_io.rmRF)(targetPath2);
+          await (0, import_io.cp)(file, targetPath2, { recursive: true });
           break;
         case "move":
-          await (0, import_io.mv)(file, targetCachePath2, { force: true });
+          await (0, import_io.mv)(file, targetPath2, { force: true });
           break;
       }
     }
     return;
   }
-  const relativePath = path2__default.default.relative(process.cwd(), sourcePath);
-  const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath);
-  await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath));
+  const targetPath = path2__default.default.join(cacheDir, path2__default.default.relative(process.cwd(), sourcePath));
+  await (0, import_io.mkdirP)(path2__default.default.dirname(targetPath));
   switch (strategy) {
     case "copy-immutable":
-      if (await (0, import_io_util.exists)(targetCachePath)) {
-        log_default.info(`Cache already exists for ${relativePath}, skipping`);
+      if (await (0, import_io_util.exists)(targetPath)) {
+        log_default.info(`Cache already exists for ${sourcePath}, skipping`);
         return;
       }
-      await (0, import_io.cp)(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true });
+      await (0, import_io.cp)(sourcePath, targetPath, { recursive: true });
       break;
     case "copy":
-      await (0, import_io.rmRF)(targetCachePath);
-      await (0, import_io.cp)(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true });
+      await (0, import_io.rmRF)(targetPath);
+      await (0, import_io.cp)(sourcePath, targetPath, { recursive: true });
       break;
     case "move":
-      await (0, import_io.mv)(sourcePath, targetCachePath, { force: true });
+      await (0, import_io.mv)(sourcePath, targetPath, { force: true });
       break;
   }
 }
@@ -5353,12 +5351,8 @@ async function post() {
     const { cacheDir, targetPaths, options } = getVars();
     await (0, import_io.mkdirP)(cacheDir);
     for (let i = 0; i < options.paths.length; i++) {
-      const relativePath = options.paths[i];
-      const pathCachePath = path2__default.default.join(cacheDir, relativePath);
-      await savePath(targetPaths[i], pathCachePath, options.strategy);
-      log_default.info(
-        `${i === 0 ? "Primary" : "Additional"} path ${relativePath} saved to cache with ${options.strategy} strategy`
-      );
+      await savePath(targetPaths[i], cacheDir, options.strategy);
+      log_default.info(`${i === 0 ? "Primary" : "Additional"} path ${options.paths[i]} saved to cache`);
     }
   } catch (error) {
     log_default.trace(error);

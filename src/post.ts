@@ -12,7 +12,7 @@ import { exists } from '@actions/io/lib/io-util'
 
 const globPromise = promisify(glob)
 
-async function savePath(sourcePath: string, cachePath: string, strategy: string): Promise<void> {
+async function savePath(sourcePath: string, cacheDir: string, strategy: string): Promise<void> {
   // Handle wildcards
   if (sourcePath.includes('*')) {
     const files = await globPromise(sourcePath)
@@ -21,28 +21,24 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
       return
     }
 
-    // Copy each matched file
     for (const file of files) {
-      // Get the relative path from the workspace root
-      const relativePath = path.relative(process.cwd(), file)
-      // Create the target path in the cache, using the cache directory as root
-      const targetCachePath = path.join(path.dirname(cachePath), relativePath)
-      await mkdirP(path.dirname(targetCachePath))
+      const targetPath = path.join(cacheDir, path.relative(process.cwd(), file))
+      await mkdirP(path.dirname(targetPath))
 
       switch (strategy) {
         case 'copy-immutable':
-          if (await exists(targetCachePath)) {
-            log.info(`Cache already exists for ${relativePath}, skipping`)
+          if (await exists(targetPath)) {
+            log.info(`Cache already exists for ${file}, skipping`)
             continue
           }
-          await cp(file, targetCachePath, { copySourceDirectory: false, recursive: true })
+          await cp(file, targetPath, { recursive: true })
           break
         case 'copy':
-          await rmRF(targetCachePath)
-          await cp(file, targetCachePath, { copySourceDirectory: false, recursive: true })
+          await rmRF(targetPath)
+          await cp(file, targetPath, { recursive: true })
           break
         case 'move':
-          await mv(file, targetCachePath, { force: true })
+          await mv(file, targetPath, { force: true })
           break
       }
     }
@@ -50,26 +46,23 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
   }
 
   // Handle regular paths
-  // Get the relative path from the workspace root
-  const relativePath = path.relative(process.cwd(), sourcePath)
-  // Create the target path in the cache, using the cache directory as root
-  const targetCachePath = path.join(path.dirname(cachePath), relativePath)
-  await mkdirP(path.dirname(targetCachePath))
+  const targetPath = path.join(cacheDir, path.relative(process.cwd(), sourcePath))
+  await mkdirP(path.dirname(targetPath))
 
   switch (strategy) {
     case 'copy-immutable':
-      if (await exists(targetCachePath)) {
-        log.info(`Cache already exists for ${relativePath}, skipping`)
+      if (await exists(targetPath)) {
+        log.info(`Cache already exists for ${sourcePath}, skipping`)
         return
       }
-      await cp(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true })
+      await cp(sourcePath, targetPath, { recursive: true })
       break
     case 'copy':
-      await rmRF(targetCachePath)
-      await cp(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true })
+      await rmRF(targetPath)
+      await cp(sourcePath, targetPath, { recursive: true })
       break
     case 'move':
-      await mv(sourcePath, targetCachePath, { force: true })
+      await mv(sourcePath, targetPath, { force: true })
       break
   }
 }
@@ -77,20 +70,11 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
 async function post(): Promise<void> {
   try {
     const { cacheDir, targetPaths, options } = getVars()
-
     await mkdirP(cacheDir)
 
-    // Save all paths
     for (let i = 0; i < options.paths.length; i++) {
-      const relativePath = options.paths[i]
-      // Use the cache directory as the root for all paths
-      const pathCachePath = path.join(cacheDir, relativePath)
-      await savePath(targetPaths[i], pathCachePath, options.strategy)
-      log.info(
-        `${i === 0 ? 'Primary' : 'Additional'} path ${relativePath} saved to cache with ${
-          options.strategy
-        } strategy`
-      )
+      await savePath(targetPaths[i], cacheDir, options.strategy)
+      log.info(`${i === 0 ? 'Primary' : 'Additional'} path ${options.paths[i]} saved to cache`)
     }
   } catch (error: unknown) {
     log.trace(error)

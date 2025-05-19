@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     // Try to restore all paths
     for (let i = 0; i < options.paths.length; i++) {
       const relativePath = options.paths[i]
-      // Preserve the full relative path structure
+      // Use the cache directory as the root for all paths
       const pathCachePath = path.join(cacheDir, relativePath)
 
       // Try primary key first
