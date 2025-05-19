@@ -21,14 +21,11 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
       return
     }
 
-    // Create the cache directory
-    await mkdirP(path.dirname(cachePath))
-
     // Copy each matched file
     for (const file of files) {
       // Get the relative path from the workspace root
       const relativePath = path.relative(process.cwd(), file)
-      // Create the target path in the cache, preserving the directory structure
+      // Create the target path in the cache, using the cache directory as root
       const targetCachePath = path.join(path.dirname(cachePath), relativePath)
       await mkdirP(path.dirname(targetCachePath))
 
@@ -53,23 +50,26 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
   }
 
   // Handle regular paths
-  // Create the cache directory
-  await mkdirP(path.dirname(cachePath))
+  // Get the relative path from the workspace root
+  const relativePath = path.relative(process.cwd(), sourcePath)
+  // Create the target path in the cache, using the cache directory as root
+  const targetCachePath = path.join(path.dirname(cachePath), relativePath)
+  await mkdirP(path.dirname(targetCachePath))
 
   switch (strategy) {
     case 'copy-immutable':
-      if (await exists(cachePath)) {
-        log.info(`Cache already exists for ${sourcePath}, skipping`)
+      if (await exists(targetCachePath)) {
+        log.info(`Cache already exists for ${relativePath}, skipping`)
         return
       }
-      await cp(sourcePath, cachePath, { copySourceDirectory: false, recursive: true })
+      await cp(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true })
       break
     case 'copy':
-      await rmRF(cachePath)
-      await cp(sourcePath, cachePath, { copySourceDirectory: false, recursive: true })
+      await rmRF(targetCachePath)
+      await cp(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true })
       break
     case 'move':
-      await mv(sourcePath, cachePath, { force: true })
+      await mv(sourcePath, targetCachePath, { force: true })
       break
   }
 }
@@ -83,7 +83,7 @@ async function post(): Promise<void> {
     // Save all paths
     for (let i = 0; i < options.paths.length; i++) {
       const relativePath = options.paths[i]
-      // Preserve the full relative path structure
+      // Use the cache directory as the root for all paths
       const pathCachePath = path.join(cacheDir, relativePath)
       await savePath(targetPaths[i], pathCachePath, options.strategy)
       log.info(

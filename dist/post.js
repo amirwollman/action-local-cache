@@ -5305,45 +5305,46 @@ async function savePath(sourcePath, cachePath, strategy) {
       log_default.info(`No files found matching pattern: ${sourcePath}`);
       return;
     }
-    await (0, import_io.mkdirP)(path2__default.default.dirname(cachePath));
     for (const file of files) {
-      const relativePath = path2__default.default.relative(process.cwd(), file);
-      const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath);
-      await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath));
+      const relativePath2 = path2__default.default.relative(process.cwd(), file);
+      const targetCachePath2 = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath2);
+      await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath2));
       switch (strategy) {
         case "copy-immutable":
-          if (await (0, import_io_util.exists)(targetCachePath)) {
-            log_default.info(`Cache already exists for ${relativePath}, skipping`);
+          if (await (0, import_io_util.exists)(targetCachePath2)) {
+            log_default.info(`Cache already exists for ${relativePath2}, skipping`);
             continue;
           }
-          await (0, import_io.cp)(file, targetCachePath, { copySourceDirectory: false, recursive: true });
+          await (0, import_io.cp)(file, targetCachePath2, { copySourceDirectory: false, recursive: true });
           break;
         case "copy":
-          await (0, import_io.rmRF)(targetCachePath);
-          await (0, import_io.cp)(file, targetCachePath, { copySourceDirectory: false, recursive: true });
+          await (0, import_io.rmRF)(targetCachePath2);
+          await (0, import_io.cp)(file, targetCachePath2, { copySourceDirectory: false, recursive: true });
           break;
         case "move":
-          await (0, import_io.mv)(file, targetCachePath, { force: true });
+          await (0, import_io.mv)(file, targetCachePath2, { force: true });
           break;
       }
     }
     return;
   }
-  await (0, import_io.mkdirP)(path2__default.default.dirname(cachePath));
+  const relativePath = path2__default.default.relative(process.cwd(), sourcePath);
+  const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath);
+  await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath));
   switch (strategy) {
     case "copy-immutable":
-      if (await (0, import_io_util.exists)(cachePath)) {
-        log_default.info(`Cache already exists for ${sourcePath}, skipping`);
+      if (await (0, import_io_util.exists)(targetCachePath)) {
+        log_default.info(`Cache already exists for ${relativePath}, skipping`);
         return;
       }
-      await (0, import_io.cp)(sourcePath, cachePath, { copySourceDirectory: false, recursive: true });
+      await (0, import_io.cp)(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true });
       break;
     case "copy":
-      await (0, import_io.rmRF)(cachePath);
-      await (0, import_io.cp)(sourcePath, cachePath, { copySourceDirectory: false, recursive: true });
+      await (0, import_io.rmRF)(targetCachePath);
+      await (0, import_io.cp)(sourcePath, targetCachePath, { copySourceDirectory: false, recursive: true });
       break;
     case "move":
-      await (0, import_io.mv)(sourcePath, cachePath, { force: true });
+      await (0, import_io.mv)(sourcePath, targetCachePath, { force: true });
       break;
   }
 }
