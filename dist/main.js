@@ -2948,28 +2948,26 @@ async function main() {
   try {
     const { cacheDir, targetDirs, targetPaths, options } = getVars();
     let cacheHit = false;
-    const primaryCachePath = path__default.default.join(cacheDir, options.paths[0]);
-    if (await tryRestoreCache(primaryCachePath, targetPaths[0], targetDirs[0], options.strategy)) {
-      cacheHit = true;
-      log_default.info(`Cache found and restored to ${options.paths[0]} with ${options.strategy} strategy`);
-    } else {
-      for (const restoreKey of options.restoreKeys) {
-        const restoreCachePath = path__default.default.join(cacheDir, restoreKey, options.paths[0]);
-        if (await tryRestoreCache(restoreCachePath, targetPaths[0], targetDirs[0], options.strategy)) {
-          cacheHit = true;
-          log_default.info(
-            `Cache found with restore-key ${restoreKey} and restored to ${options.paths[0]} with ${options.strategy} strategy`
-          );
-          break;
-        }
+    for (let i = 0; i < options.paths.length; i++) {
+      const relativePath = options.paths[i];
+      const pathCachePath = path__default.default.join(cacheDir, path__default.default.basename(relativePath));
+      if (await tryRestoreCache(pathCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
+        cacheHit = true;
+        log_default.info(
+          `${i === 0 ? "Primary" : "Additional"} path ${relativePath} restored with ${options.strategy} strategy`
+        );
+        continue;
       }
-    }
-    if (cacheHit && options.paths.length > 1) {
-      for (let i = 1; i < options.paths.length; i++) {
-        const relativePath = options.paths[i];
-        const pathCachePath = path__default.default.join(cacheDir, relativePath);
-        if (await tryRestoreCache(pathCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
-          log_default.info(`Additional path ${relativePath} restored with ${options.strategy} strategy`);
+      if (i === 0) {
+        for (const restoreKey of options.restoreKeys) {
+          const restoreCachePath = path__default.default.join(cacheDir, restoreKey, path__default.default.basename(relativePath));
+          if (await tryRestoreCache(restoreCachePath, targetPaths[i], targetDirs[i], options.strategy)) {
+            cacheHit = true;
+            log_default.info(
+              `Primary path ${relativePath} restored with restore-key ${restoreKey} using ${options.strategy} strategy`
+            );
+            break;
+          }
         }
       }
     }

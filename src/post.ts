@@ -26,8 +26,10 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
 
     // Copy each matched file
     for (const file of files) {
+      // Get the relative path from the workspace root
       const relativePath = path.relative(process.cwd(), file)
-      const targetCachePath = path.join(path.dirname(cachePath), relativePath)
+      // Create the target path in the cache, preserving the directory structure
+      const targetCachePath = path.join(path.dirname(cachePath), path.basename(relativePath))
       await mkdirP(path.dirname(targetCachePath))
 
       switch (strategy) {
@@ -71,23 +73,21 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
 
 async function post(): Promise<void> {
   try {
-    const { cacheDir, targetPaths, cachePath, options } = getVars()
+    const { cacheDir, targetPaths, options } = getVars()
 
     await mkdirP(cacheDir)
 
-    // Save primary path
-    await savePath(targetPaths[0], cachePath, options.strategy)
-    log.info(`Primary path ${options.paths[0]} saved to cache with ${options.strategy} strategy`)
-
-    // Save additional paths if any
-    if (options.paths.length > 1) {
-      for (let i = 1; i < options.paths.length; i++) {
-        // Use the path relative to the workspace root
-        const relativePath = options.paths[i]
-        const pathCachePath = path.join(cacheDir, relativePath)
-        await savePath(targetPaths[i], pathCachePath, options.strategy)
-        log.info(`Additional path ${relativePath} saved to cache with ${options.strategy} strategy`)
-      }
+    // Save all paths
+    for (let i = 0; i < options.paths.length; i++) {
+      const relativePath = options.paths[i]
+      // Use just the basename of the path to prevent duplication
+      const pathCachePath = path.join(cacheDir, path.basename(relativePath))
+      await savePath(targetPaths[i], pathCachePath, options.strategy)
+      log.info(
+        `${i === 0 ? 'Primary' : 'Additional'} path ${relativePath} saved to cache with ${
+          options.strategy
+        } strategy`
+      )
     }
   } catch (error: unknown) {
     log.trace(error)

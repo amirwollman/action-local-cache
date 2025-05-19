@@ -5308,7 +5308,7 @@ async function savePath(sourcePath, cachePath, strategy) {
     await (0, import_io.mkdirP)(path2__default.default.dirname(cachePath));
     for (const file of files) {
       const relativePath = path2__default.default.relative(process.cwd(), file);
-      const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), relativePath);
+      const targetCachePath = path2__default.default.join(path2__default.default.dirname(cachePath), path2__default.default.basename(relativePath));
       await (0, import_io.mkdirP)(path2__default.default.dirname(targetCachePath));
       switch (strategy) {
         case "copy-immutable":
@@ -5348,17 +5348,15 @@ async function savePath(sourcePath, cachePath, strategy) {
 }
 async function post() {
   try {
-    const { cacheDir, targetPaths, cachePath, options } = getVars();
+    const { cacheDir, targetPaths, options } = getVars();
     await (0, import_io.mkdirP)(cacheDir);
-    await savePath(targetPaths[0], cachePath, options.strategy);
-    log_default.info(`Primary path ${options.paths[0]} saved to cache with ${options.strategy} strategy`);
-    if (options.paths.length > 1) {
-      for (let i = 1; i < options.paths.length; i++) {
-        const relativePath = options.paths[i];
-        const pathCachePath = path2__default.default.join(cacheDir, relativePath);
-        await savePath(targetPaths[i], pathCachePath, options.strategy);
-        log_default.info(`Additional path ${relativePath} saved to cache with ${options.strategy} strategy`);
-      }
+    for (let i = 0; i < options.paths.length; i++) {
+      const relativePath = options.paths[i];
+      const pathCachePath = path2__default.default.join(cacheDir, path2__default.default.basename(relativePath));
+      await savePath(targetPaths[i], pathCachePath, options.strategy);
+      log_default.info(
+        `${i === 0 ? "Primary" : "Additional"} path ${relativePath} saved to cache with ${options.strategy} strategy`
+      );
     }
   } catch (error) {
     log_default.trace(error);
