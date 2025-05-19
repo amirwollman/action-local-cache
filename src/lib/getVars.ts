@@ -2,7 +2,7 @@ import path from 'path'
 
 import * as core from '@actions/core'
 
-const { GITHUB_REPOSITORY, RUNNER_TOOL_CACHE } = process.env
+const { GITHUB_REPOSITORY, RUNNER_CACHE_DIR, RUNNER_TOOL_CACHE } = process.env
 const CWD = process.cwd()
 
 export const STRATEGIES = ['copy-immutable', 'copy', 'move'] as const
@@ -55,7 +55,7 @@ export const getVars = (): Vars => {
     throw new TypeError(`Unknown strategy ${options.strategy}`)
   }
 
-  const baseCacheDir = options.cacheLocation || path.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY)
+  const baseCacheDir = options.cacheLocation || RUNNER_CACHE_DIR || path.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY)
   const cacheDir = path.join(baseCacheDir, options.key)
   const cachePath = path.join(cacheDir, options.paths[0]) // Primary path for cache
   const targetPaths = options.paths.map((p: string) => path.resolve(CWD, p))

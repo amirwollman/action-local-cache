@@ -2867,7 +2867,7 @@ var import_io_util = __toESM(require_io_util());
 
 // src/lib/getVars.ts
 var core = __toESM(require_core());
-var { GITHUB_REPOSITORY, RUNNER_TOOL_CACHE } = process.env;
+var { GITHUB_REPOSITORY, RUNNER_CACHE_DIR, RUNNER_TOOL_CACHE } = process.env;
 var CWD = process.cwd();
 var STRATEGIES = ["copy-immutable", "copy", "move"];
 var getVars = () => {
@@ -2890,7 +2890,7 @@ var getVars = () => {
   if (!Object.values(STRATEGIES).includes(options.strategy)) {
     throw new TypeError(`Unknown strategy ${options.strategy}`);
   }
-  const baseCacheDir = options.cacheLocation || path__default.default.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY);
+  const baseCacheDir = options.cacheLocation || RUNNER_CACHE_DIR || path__default.default.join(RUNNER_TOOL_CACHE, GITHUB_REPOSITORY);
   const cacheDir = path__default.default.join(baseCacheDir, options.key);
   const cachePath = path__default.default.join(cacheDir, options.paths[0]);
   const targetPaths = options.paths.map((p) => path__default.default.resolve(CWD, p));
