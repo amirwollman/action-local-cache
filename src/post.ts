@@ -53,17 +53,20 @@ async function savePath(sourcePath: string, cachePath: string, strategy: string)
   }
 
   // Handle regular paths
+  // Create the cache directory
+  await mkdirP(path.dirname(cachePath))
+
   switch (strategy) {
     case 'copy-immutable':
       if (await exists(cachePath)) {
         log.info(`Cache already exists for ${sourcePath}, skipping`)
         return
       }
-      await cp(sourcePath, cachePath, { copySourceDirectory: true, recursive: true })
+      await cp(sourcePath, cachePath, { copySourceDirectory: false, recursive: true })
       break
     case 'copy':
       await rmRF(cachePath)
-      await cp(sourcePath, cachePath, { copySourceDirectory: true, recursive: true })
+      await cp(sourcePath, cachePath, { copySourceDirectory: false, recursive: true })
       break
     case 'move':
       await mv(sourcePath, cachePath, { force: true })

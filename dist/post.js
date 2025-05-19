@@ -5329,17 +5329,18 @@ async function savePath(sourcePath, cachePath, strategy) {
     }
     return;
   }
+  await (0, import_io.mkdirP)(path2__default.default.dirname(cachePath));
   switch (strategy) {
     case "copy-immutable":
       if (await (0, import_io_util.exists)(cachePath)) {
         log_default.info(`Cache already exists for ${sourcePath}, skipping`);
         return;
       }
-      await (0, import_io.cp)(sourcePath, cachePath, { copySourceDirectory: true, recursive: true });
+      await (0, import_io.cp)(sourcePath, cachePath, { copySourceDirectory: false, recursive: true });
       break;
     case "copy":
       await (0, import_io.rmRF)(cachePath);
-      await (0, import_io.cp)(sourcePath, cachePath, { copySourceDirectory: true, recursive: true });
+      await (0, import_io.cp)(sourcePath, cachePath, { copySourceDirectory: false, recursive: true });
       break;
     case "move":
       await (0, import_io.mv)(sourcePath, cachePath, { force: true });
