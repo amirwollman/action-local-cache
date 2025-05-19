@@ -6,7 +6,7 @@ const { GITHUB_REPOSITORY, RUNNER_TOOL_CACHE } = process.env
 const CWD = process.cwd()
 
 export const STRATEGIES = ['copy-immutable', 'copy', 'move'] as const
-export type Strategy = typeof STRATEGIES[number]
+export type Strategy = (typeof STRATEGIES)[number]
 
 type Vars = {
   cacheDir: string
@@ -34,9 +34,15 @@ export const getVars = (): Vars => {
   const options = {
     key: core.getInput('key') || 'no-key',
     restoreKeys: core.getInput('restore-keys')
-      ? core.getInput('restore-keys').split('|').map((k: string) => k.trim())
+      ? core
+          .getInput('restore-keys')
+          .split('\n')
+          .map((k: string) => k.trim())
       : [],
-    paths: core.getInput('path').split('|').map((p: string) => p.trim()),
+    paths: core
+      .getInput('path')
+      .split('\n')
+      .map((p: string) => p.trim()),
     strategy: core.getInput('strategy') as Strategy,
     cacheLocation: core.getInput('cache-location'),
   }

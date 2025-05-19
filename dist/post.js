@@ -2878,8 +2878,8 @@ var getVars = () => {
   }
   const options = {
     key: core.getInput("key") || "no-key",
-    restoreKeys: core.getInput("restore-keys") ? core.getInput("restore-keys").split("|").map((k) => k.trim()) : [],
-    paths: core.getInput("path").split("|").map((p) => p.trim()),
+    restoreKeys: core.getInput("restore-keys") ? core.getInput("restore-keys").split("\n").map((k) => k.trim()) : [],
+    paths: core.getInput("path").split("\n").map((p) => p.trim()),
     strategy: core.getInput("strategy"),
     cacheLocation: core.getInput("cache-location")
   };
